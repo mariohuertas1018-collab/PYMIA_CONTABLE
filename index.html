@@ -254,18 +254,42 @@ tr:hover td{background:#FAFBFC}
 @media (max-width: 768px) {
   .sb{transform:translateX(-100%);transition:transform .3s ease;width:280px;z-index:1000;}
   .sb.open{transform:translateX(0);}
-  .main{margin-left:0;padding:20px 16px 60px;max-width:100vw;width:100vw;overflow-x:hidden;}
   
-  .grid-3,.grid-4,.grid-2,.perm-grid,.risk-grid,.opt-grid,.protect-grid,.stack-grid,.opp-grid,.tier-grid,.diff-grid{grid-template-columns:1fr;gap:12px;}
-  .comp-card,.pros-cons{grid-template-columns:1fr;}
+  /* Main Container */
+  .main{margin-left:0;padding:20px 16px 60px;width:100%;max-width:100%;}
+  
+  /* Typography */
+  .ph h1{font-size:22px;line-height:1.3;}
+  .ph p{font-size:12px;margin-top:10px;}
+  .sec-heading{font-size:18px;}
+  
+  /* Grids */
+  .grid-3,.grid-4,.grid-2,.perm-grid,.risk-grid,.opt-grid,.protect-grid,.stack-grid,.opp-grid,.tier-grid,.diff-grid{grid-template-columns:1fr;gap:16px;}
+  .comp-card,.pros-cons{grid-template-columns:1fr;gap:12px;}
+  
+  /* Paddings */
+  .card, .sw-card, .auto-card, .comp-card, .tier, .diff-old, .diff-new, .roadmap, .flow-box, .dark-box {padding:16px;}
+  
+  /* Flex items */
+  .dark-box > div, .alert-box, .rm-item {flex-direction:column; gap:12px;}
+  .alert-box {padding:16px;}
+  
+  /* Steps and Flow */
   .step-row{flex-direction:column;gap:20px;}
   .step-row::before{display:none;}
   .flow-step{flex-direction:column;gap:8px;}
   
-  .mobile-header{display:flex;align-items:center;justify-content:space-between;background:var(--navy);padding:14px 20px;position:sticky;top:0;z-index:90;box-shadow:0 2px 4px rgba(0,0,0,0.1);}
+  /* Tables */
+  .table-wrap {padding:12px;}
+  th, td {font-size:11px; padding:8px 6px;}
+  
+  /* Mobile Header */
+  .mobile-header{display:flex;align-items:center;justify-content:space-between;background:var(--navy);padding:14px 20px;position:sticky;top:0;z-index:90;box-shadow:0 2px 8px rgba(0,0,0,0.15);}
   .mobile-title{color:#fff;font-weight:800;font-size:14px;letter-spacing:1px;}
-  .hamburger{color:#fff;font-size:20px;cursor:pointer;background:none;border:none;}
-  .overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:95;backdrop-filter:blur(2px);}
+  .hamburger{color:#fff;font-size:24px;cursor:pointer;background:none;border:none;padding:0;}
+  
+  /* Overlay */
+  .overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(13,27,42,.7);z-index:95;backdrop-filter:blur(3px);}
   .overlay.show{display:block;}
 }
 @media (min-width: 769px) {

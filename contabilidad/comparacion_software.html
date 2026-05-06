@@ -1,0 +1,845 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pymia — Estrategia Contable & Modelo de Negocio</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --navy:#0D1B2A;--navy2:#1A2E42;--gold:#E8B84B;--teal:#1ABC9C;
+  --red:#E74C3C;--orange:#E67E22;--blue:#2980B9;--green:#27AE60;
+  --purple:#8E44AD;--gray:#F4F6F9;--mid:#8A97A8;--dark:#2C3E50;--white:#fff;
+  --sw:260px;
+}
+body{font-family:'Segoe UI',Arial,sans-serif;background:#EAECEF;color:var(--dark);font-size:13px;line-height:1.6;display:flex;min-height:100vh}
+
+/* SIDEBAR */
+.sb{width:var(--sw);min-height:100vh;background:var(--navy);position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100}
+.sb-logo{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-brand{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+.sb-title{font-size:13px;font-weight:700;color:#fff;line-height:1.3}
+.sb-nav{flex:1;padding:14px 0;overflow-y:auto}
+.sb-section{padding:8px 20px 4px;font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.nb{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:rgba(255,255,255,.55);border-left:3px solid transparent;transition:all .2s;font-size:12px}
+.nb:hover{background:rgba(255,255,255,.06);color:#fff}
+.nb.active{background:rgba(232,184,75,.12);color:var(--gold);border-left-color:var(--gold)}
+.nb-ic{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+.sb-foot{padding:14px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:10px;color:var(--mid)}
+
+/* MAIN */
+.main{margin-left:var(--sw);flex:1;padding:32px 36px 80px;max-width:calc(100vw - var(--sw))}
+
+/* PAGE HEADER */
+.ph{margin-bottom:28px;padding-bottom:20px;border-bottom:1px solid #DDE1E7}
+.ph-tag{font-size:10px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.ph h1{font-size:26px;font-weight:900;color:var(--navy);line-height:1.2}
+.ph p{font-size:12px;color:var(--mid);margin-top:6px;max-width:600px}
+
+/* SECTION */
+.sec{display:none}.sec.active{display:block}
+
+/* CARDS GRID */
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+
+/* CARD BASE */
+.card{background:#fff;border-radius:10px;padding:20px 22px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:16px}
+.card-title{font-size:14px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.card-sub{font-size:11px;color:var(--mid);margin-bottom:14px}
+
+/* SECTION LABEL */
+.sec-label{font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px}
+.sec-heading{font-size:22px;font-weight:900;color:var(--navy);margin-bottom:4px}
+.sec-desc{font-size:12px;color:var(--mid);margin-bottom:24px;max-width:600px}
+
+/* BADGE */
+.badge{display:inline-block;padding:2px 9px;border-radius:20px;font-size:10px;font-weight:600}
+.bg{background:#EAFAF1;color:#27AE60}.br{background:#FDEDEC;color:#E74C3C}
+.bb{background:#EBF5FB;color:#2980B9}.bo{background:#FFF8E7;color:#E67E22}
+.bp{background:#F5EEF8;color:#8E44AD}.bk{background:#F4F6F9;color:#5D6D7E}
+
+/* SW CARDS */
+.sw-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:2px solid transparent;position:relative}
+.sw-card.winner{border-color:var(--gold)}
+.winner-badge{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--navy);font-size:10px;font-weight:800;padding:3px 14px;border-radius:20px;white-space:nowrap;letter-spacing:.5px}
+.sw-name{font-size:15px;font-weight:800;color:var(--navy)}
+.sw-origin{font-size:10px;color:var(--mid);margin-bottom:10px}
+.sw-desc{font-size:11px;color:var(--mid);line-height:1.5;margin-bottom:12px}
+.sw-badges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:12px}
+.score-row{display:flex;align-items:center;gap:8px;padding-top:10px;border-top:1px solid #F0F0F0}
+.score-bar{flex:1;height:4px;background:#E8ECF0;border-radius:3px;overflow:hidden}
+.score-fill{height:100%;border-radius:3px}
+.score-num{font-size:12px;font-weight:800;color:var(--navy);width:28px;text-align:right}
+.price-row{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+.price-val{font-size:13px;font-weight:800;color:var(--navy)}
+.price-unit{font-size:10px;color:var(--mid)}
+.pros-cons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pc-block{background:#F8F9FA;border-radius:6px;padding:8px 10px}
+.pc-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.pc-title.pro{color:var(--green)}.pc-title.con{color:var(--red)}
+.pc-list{list-style:none}
+.pc-list li{font-size:10px;color:var(--dark);padding:2px 0;display:flex;gap:4px}
+
+/* TABLE */
+.table-wrap{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:24px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;min-width:600px}
+th{text-align:left;font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;padding:8px 12px;border-bottom:2px solid #F0F0F0;letter-spacing:.5px}
+th.wc{background:rgba(232,184,75,.08);color:var(--gold)}
+td{padding:9px 12px;border-bottom:1px solid #F8F8F8;font-size:12px;vertical-align:middle}
+td.wc{background:rgba(232,184,75,.04)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#FAFBFC}
+.yes{color:var(--green);font-size:14px}
+.no{color:var(--red);font-size:14px}
+.partial{color:var(--orange);font-size:14px}
+
+/* AUTO CARDS */
+.auto-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.auto-icon{font-size:24px;margin-bottom:8px}
+.auto-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:8px}
+.auto-list{list-style:none}
+.auto-list li{font-size:11px;color:var(--mid);padding:4px 0;border-bottom:1px solid #F4F6F9;display:flex;gap:7px}
+.auto-list li:last-child{border-bottom:none}
+
+/* LEGAL */
+.alert-box{border-radius:10px;padding:20px 24px;margin-bottom:20px;display:flex;gap:16px;align-items:flex-start}
+.alert-red{background:#FDEDEC;border:2px solid var(--red)}
+.alert-green{background:#EAFAF1;border:2px solid var(--green)}
+.alert-icon{font-size:28px;flex-shrink:0}
+.alert-title{font-size:14px;font-weight:800;margin-bottom:6px}
+.alert-red .alert-title{color:var(--red)}
+.alert-green .alert-title{color:var(--green)}
+.alert-text{font-size:12px;line-height:1.6}
+.alert-red .alert-text{color:#922B21}
+.alert-green .alert-text{color:#1D6A3A}
+
+.perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
+.perm-block{border-radius:8px;padding:16px 18px}
+.perm-yes{background:#EAFAF1;border-left:4px solid var(--green)}
+.perm-no{background:#FDEDEC;border-left:4px solid var(--red)}
+.perm-title{font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.perm-yes .perm-title{color:var(--green)}
+.perm-no .perm-title{color:var(--red)}
+.perm-list{list-style:none}
+.perm-list li{font-size:11px;color:var(--dark);padding:3px 0;display:flex;gap:7px}
+
+.risk-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+.risk-item{background:#FFF8E7;border-radius:8px;padding:14px 16px;display:flex;gap:10px}
+.risk-item.high{background:#FDEDEC}
+.risk-icon{font-size:18px;flex-shrink:0}
+.risk-title{font-size:12px;font-weight:700;color:var(--dark);margin-bottom:3px}
+.risk-desc{font-size:11px;color:var(--mid);line-height:1.4}
+
+.opt-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.opt-card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.opt-card.dark{background:linear-gradient(135deg,#0D1B2A,#0d2a4a);border:1px solid rgba(232,184,75,.25)}
+.opt-num{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.opt-title{font-size:15px;font-weight:800;margin-bottom:8px}
+.opt-card:not(.dark) .opt-num{color:var(--blue)}
+.opt-card:not(.dark) .opt-title{color:var(--navy)}
+.opt-card.dark .opt-num{color:var(--gold)}
+.opt-card.dark .opt-title{color:#fff}
+.opt-desc{font-size:12px;line-height:1.6;margin-bottom:12px}
+.opt-card:not(.dark) .opt-desc{color:var(--mid)}
+.opt-card.dark .opt-desc{color:rgba(255,255,255,.6)}
+.income-box{border-radius:6px;padding:10px 12px;font-size:12px;margin-bottom:12px}
+.opt-card:not(.dark) .income-box{background:#F4F6F9;color:var(--dark)}
+.opt-card.dark .income-box{background:rgba(255,255,255,.08);color:#fff;border:1px solid rgba(255,255,255,.1)}
+
+.protect-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.protect-item{background:#fff;border-radius:8px;padding:14px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.protect-ic{font-size:24px;margin-bottom:8px}
+.protect-title{font-size:11px;font-weight:700;color:var(--navy);margin-bottom:4px}
+.protect-desc{font-size:10px;color:var(--mid);line-height:1.4}
+
+/* IMPLEMENTACION */
+.step-row{display:flex;gap:0;margin-bottom:28px;position:relative}
+.step-row::before{content:'';position:absolute;top:24px;left:24px;right:0;height:2px;background:linear-gradient(90deg,var(--gold),transparent);z-index:0}
+.step{flex:1;position:relative;z-index:1}
+.step-num{width:48px;height:48px;border-radius:50%;background:var(--navy);color:var(--gold);font-size:16px;font-weight:900;display:flex;align-items:center;justify-content:center;margin-bottom:10px;border:3px solid var(--gold)}
+.step-title{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:4px}
+.step-desc{font-size:11px;color:var(--mid);line-height:1.5;padding-right:12px}
+
+.flow-box{background:#fff;border-radius:10px;padding:20px 24px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:20px}
+.flow-title{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.flow-steps{display:flex;flex-direction:column;gap:0}
+.flow-step{display:flex;gap:14px;padding:10px 0;border-bottom:1px solid #F4F6F9;align-items:flex-start}
+.flow-step:last-child{border-bottom:none}
+.flow-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0;margin-top:1px}
+.flow-content{}
+.flow-name{font-size:12px;font-weight:700;color:var(--dark)}
+.flow-sub{font-size:11px;color:var(--mid)}
+
+.stack-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+.stack-item{background:#fff;border-radius:8px;padding:14px 16px;box-shadow:0 1px 4px rgba(0,0,0,.06);border-top:3px solid var(--navy)}
+.stack-tool{font-size:13px;font-weight:800;color:var(--navy);margin-bottom:3px}
+.stack-role{font-size:11px;color:var(--mid)}
+
+/* COMPETENCIA */
+.comp-card{background:#fff;border-radius:10px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:14px;display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:start}
+.comp-name{font-size:15px;font-weight:800;color:var(--navy);margin-bottom:3px}
+.comp-type{font-size:10px;color:var(--mid);margin-bottom:8px}
+.comp-badges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px}
+.comp-price{font-size:12px;font-weight:700;color:var(--dark)}
+.comp-detail{}
+.comp-what{font-size:12px;color:var(--mid);line-height:1.6;margin-bottom:8px}
+.comp-gap{background:#FFF8E7;border-radius:6px;padding:8px 12px;font-size:11px;color:#7D6608;line-height:1.5}
+.comp-gap strong{color:var(--orange)}
+
+.opp-box{background:linear-gradient(135deg,#0D1B2A,#0d2a4a);border-radius:12px;padding:28px 32px;margin-top:20px;border:1px solid rgba(232,184,75,.25)}
+.opp-title{font-size:18px;font-weight:900;color:#fff;margin-bottom:6px}
+.opp-sub{font-size:12px;color:rgba(255,255,255,.5);margin-bottom:20px}
+.opp-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.opp-item{background:rgba(255,255,255,.07);border-radius:8px;padding:14px 16px;border:1px solid rgba(255,255,255,.1)}
+.opp-item-title{font-size:11px;font-weight:700;color:var(--gold);margin-bottom:6px}
+.opp-item p{font-size:11px;color:rgba(255,255,255,.55);line-height:1.5}
+
+/* MODELO DE NEGOCIO */
+.tier-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.tier{background:#fff;border-radius:12px;padding:24px;box-shadow:0 1px 4px rgba(0,0,0,.06);position:relative;border-top:4px solid #E8ECF0}
+.tier.mid{border-top-color:var(--blue)}
+.tier.top{background:linear-gradient(135deg,#0D1B2A,#0d2a4a);border-top-color:var(--gold)}
+.tier-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.tier:not(.top) .tier-name{color:var(--mid)}
+.tier.top .tier-name{color:var(--gold)}
+.tier-price{font-size:28px;font-weight:900;margin-bottom:2px}
+.tier:not(.top) .tier-price{color:var(--navy)}
+.tier.top .tier-price{color:#fff}
+.tier-period{font-size:11px;color:var(--mid);margin-bottom:16px}
+.tier.top .tier-period{color:rgba(255,255,255,.4)}
+.tier-features{list-style:none;margin-bottom:16px}
+.tier-features li{font-size:11px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.05);display:flex;gap:7px}
+.tier:not(.top) .tier-features li{color:var(--dark)}
+.tier.top .tier-features li{color:rgba(255,255,255,.7);border-bottom-color:rgba(255,255,255,.08)}
+.tier-cta{display:block;text-align:center;padding:9px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none}
+.tier:not(.top) .tier-cta{background:var(--gray);color:var(--navy)}
+.tier.top .tier-cta{background:var(--gold);color:var(--navy)}
+.tier-pop{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--blue);color:#fff;font-size:10px;font-weight:700;padding:3px 12px;border-radius:20px;white-space:nowrap}
+
+.rev-box{background:#fff;border-radius:10px;padding:20px 24px;box-shadow:0 1px 4px rgba(0,0,0,.06);margin-bottom:20px}
+.rev-table{width:100%;border-collapse:collapse}
+.rev-table th{font-size:10px;font-weight:700;color:var(--mid);text-transform:uppercase;padding:6px 10px;border-bottom:2px solid #F0F0F0;text-align:left}
+.rev-table td{font-size:12px;padding:8px 10px;border-bottom:1px solid #F8F8F8}
+.rev-table tr:last-child td{border-bottom:none;font-weight:800;color:var(--navy)}
+.rev-table tr:last-child td:first-child{color:var(--navy)}
+
+.diff-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+.diff-old{background:#F8F9FA;border-radius:10px;padding:20px;border:2px solid #DDE1E7}
+.diff-new{background:linear-gradient(135deg,#0D1B2A,#0d2a4a);border-radius:10px;padding:20px;border:2px solid rgba(232,184,75,.3)}
+.diff-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
+.diff-old .diff-label{color:var(--mid)}
+.diff-new .diff-label{color:var(--gold)}
+.diff-title{font-size:15px;font-weight:800;margin-bottom:10px}
+.diff-old .diff-title{color:var(--dark)}
+.diff-new .diff-title{color:#fff}
+.diff-list{list-style:none}
+.diff-list li{font-size:12px;padding:5px 0;border-bottom:1px solid rgba(0,0,0,.06);display:flex;gap:8px}
+.diff-old .diff-list li{color:var(--mid);border-bottom-color:rgba(0,0,0,.06)}
+.diff-new .diff-list li{color:rgba(255,255,255,.6);border-bottom-color:rgba(255,255,255,.08)}
+.diff-list li:last-child{border-bottom:none}
+
+.roadmap{display:flex;flex-direction:column;gap:0;background:#fff;border-radius:10px;padding:20px 24px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.rm-item{display:flex;gap:16px;padding:12px 0;border-bottom:1px solid #F4F6F9;align-items:flex-start}
+.rm-item:last-child{border-bottom:none}
+.rm-period{font-size:10px;font-weight:700;color:var(--gold);background:rgba(232,184,75,.12);border:1px solid rgba(232,184,75,.3);border-radius:6px;padding:3px 10px;white-space:nowrap;flex-shrink:0;margin-top:2px}
+.rm-content{}
+.rm-title{font-size:12px;font-weight:800;color:var(--navy);margin-bottom:3px}
+.rm-desc{font-size:11px;color:var(--mid);line-height:1.5}
+
+/* DARK HIGHLIGHT BOX */
+.dark-box{background:linear-gradient(135deg,#0D1B2A,#0d2a4a);border-radius:12px;padding:24px 28px;position:relative;overflow:hidden;margin-bottom:20px;border:1px solid rgba(232,184,75,.2)}
+.dark-box::after{content:'';position:absolute;bottom:0;left:0;right:0;height:3px;background:var(--gold)}
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sb">
+  <div class="sb-logo">
+    <div class="sb-brand">PYMIA · Análisis interno</div>
+    <div class="sb-title">Estrategia Contable & Modelo de Negocio</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="sb-section">Herramienta</div>
+    <div class="nb active" onclick="nav('software',this)"><span class="nb-ic">📊</span>Comparación Software</div>
+    <div class="nb" onclick="nav('api',this)"><span class="nb-ic">⚡</span>API & Automatizaciones</div>
+    <div class="sb-section">Legal & Operación</div>
+    <div class="nb" onclick="nav('legal',this)"><span class="nb-ic">⚖️</span>Marco Legal</div>
+    <div class="nb" onclick="nav('implementacion',this)"><span class="nb-ic">🏗️</span>Implementación en Pymia</div>
+    <div class="sb-section">Mercado</div>
+    <div class="nb" onclick="nav('competencia',this)"><span class="nb-ic">🔍</span>Competencia Colombia</div>
+    <div class="nb" onclick="nav('negocio',this)"><span class="nb-ic">💡</span>Modelo de Negocio</div>
+  </nav>
+  <div class="sb-foot">Pymia · Mayo 2026 · Uso interno</div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- ═══ SOFTWARE ═══ -->
+<section id="s-software" class="sec active">
+  <div class="ph">
+    <div class="ph-tag">Análisis comparativo</div>
+    <h1>Software Contable para PYMEs Colombianas</h1>
+    <p>Evaluación de las principales opciones del mercado bajo 4 criterios críticos para el modelo de Pymia como consultora contable.</p>
+  </div>
+
+  <div class="grid-4" style="margin-bottom:28px">
+    <div class="card" style="margin-bottom:0;border-top:3px solid var(--gold)"><div style="font-size:20px;margin-bottom:6px">🇨🇴</div><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:3px">Cumplimiento DIAN</div><div style="font-size:11px;color:var(--mid)">Facturación electrónica, NIIF PYME, reportes tributarios</div></div>
+    <div class="card" style="margin-bottom:0;border-top:3px solid var(--blue)"><div style="font-size:20px;margin-bottom:6px">💰</div><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:3px">Costo total</div><div style="font-size:11px;color:var(--mid)">Licencia, implementación, soporte y costo por cliente</div></div>
+    <div class="card" style="margin-bottom:0;border-top:3px solid var(--teal)"><div style="font-size:20px;margin-bottom:6px">⚡</div><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:3px">Velocidad adopción</div><div style="font-size:11px;color:var(--mid)">Curva de aprendizaje del equipo Pymia y del cliente</div></div>
+    <div class="card" style="margin-bottom:0;border-top:3px solid var(--purple)"><div style="font-size:20px;margin-bottom:6px">🔗</div><div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:3px">API & Integración</div><div style="font-size:11px;color:var(--mid)">Conectar con automatizaciones, dashboards y reportes</div></div>
+  </div>
+
+  <div class="grid-3">
+    <div class="sw-card winner">
+      <div class="winner-badge">★ RECOMENDADO</div>
+      <div class="price-row"><div><div class="sw-name">Alegra</div><div class="sw-origin">Colombia / Latam · Nube</div></div><div style="text-align:right"><div class="price-val">$60k–150k</div><div class="price-unit">COP/mes</div></div></div>
+      <div class="sw-desc">Líder en Colombia para PYMEs. DIAN nativa. Plan Contador gestiona múltiples empresas desde una sola cuenta. API documentada y disponible.</div>
+      <div class="sw-badges"><span class="badge bg">DIAN nativa</span><span class="badge bg">Multi-empresa</span><span class="badge bb">API</span><span class="badge bg">Nube</span></div>
+      <div class="pros-cons">
+        <div class="pc-block"><div class="pc-title pro">Pros</div><ul class="pc-list"><li>✓ Más fácil de aprender</li><li>✓ Precio más bajo</li><li>✓ API para automatizar</li><li>✓ Soporte en español</li></ul></div>
+        <div class="pc-block"><div class="pc-title con">Contras</div><ul class="pc-list"><li>✗ Menos funciones que Siigo</li><li>✗ Reportes menos avanzados</li></ul></div>
+      </div>
+      <div class="score-row"><span style="font-size:10px;color:var(--mid)">Puntaje</span><div class="score-bar"><div class="score-fill" style="width:92%;background:var(--gold)"></div></div><span class="score-num">9.2</span></div>
+    </div>
+
+    <div class="sw-card">
+      <div class="price-row"><div><div class="sw-name">Siigo Nube</div><div class="sw-origin">Colombia · Nube</div></div><div style="text-align:right"><div class="price-val">$80k–220k</div><div class="price-unit">COP/mes</div></div></div>
+      <div class="sw-desc">El más usado por contadores colombianos. Muy robusto. Siigo Nube Contador es ideal para despachos que manejan múltiples clientes.</div>
+      <div class="sw-badges"><span class="badge bg">DIAN nativa</span><span class="badge bg">Multi-empresa</span><span class="badge bo">API limitada</span></div>
+      <div class="pros-cons">
+        <div class="pc-block"><div class="pc-title pro">Pros</div><ul class="pc-list"><li>✓ Más completo del mercado</li><li>✓ Contadores lo conocen</li></ul></div>
+        <div class="pc-block"><div class="pc-title con">Contras</div><ul class="pc-list"><li>✗ Más costoso</li><li>✗ Curva de aprendizaje alta</li><li>✗ API poco documentada</li></ul></div>
+      </div>
+      <div class="score-row"><span style="font-size:10px;color:var(--mid)">Puntaje</span><div class="score-bar"><div class="score-fill" style="width:80%;background:var(--blue)"></div></div><span class="score-num">8.0</span></div>
+    </div>
+
+    <div class="sw-card">
+      <div class="price-row"><div><div class="sw-name">World Office</div><div class="sw-origin">Colombia · Local/Nube</div></div><div style="text-align:right"><div class="price-val">Licencia</div><div class="price-unit">pago único</div></div></div>
+      <div class="sw-desc">ERP colombiano tradicional, interfaz antigua. Popular en medianas empresas y contadores de la vieja guardia. Difícil de automatizar.</div>
+      <div class="sw-badges"><span class="badge bg">DIAN</span><span class="badge bo">On-premise</span><span class="badge br">Sin API</span></div>
+      <div class="pros-cons">
+        <div class="pc-block"><div class="pc-title pro">Pros</div><ul class="pc-list"><li>✓ Pago único</li><li>✓ Muy conocido en Colombia</li></ul></div>
+        <div class="pc-block"><div class="pc-title con">Contras</div><ul class="pc-list"><li>✗ Interfaz muy antigua</li><li>✗ No automatizable</li><li>✗ No nativo en nube</li></ul></div>
+      </div>
+      <div class="score-row"><span style="font-size:10px;color:var(--mid)">Puntaje</span><div class="score-bar"><div class="score-fill" style="width:55%;background:var(--orange)"></div></div><span class="score-num">5.5</span></div>
+    </div>
+
+    <div class="sw-card">
+      <div class="price-row"><div><div class="sw-name">ContaPyme</div><div class="sw-origin">Colombia · Nube</div></div><div style="text-align:right"><div class="price-val">$50k–120k</div><div class="price-unit">COP/mes</div></div></div>
+      <div class="sw-desc">Enfocado en PYMEs colombianas. Precio competitivo pero menor reconocimiento de marca — puede dificultar la confianza del cliente al recomendarlo.</div>
+      <div class="sw-badges"><span class="badge bg">DIAN</span><span class="badge bb">Nube</span><span class="badge br">API limitada</span></div>
+      <div class="pros-cons">
+        <div class="pc-block"><div class="pc-title pro">Pros</div><ul class="pc-list"><li>✓ Precio bajo</li><li>✓ Fácil de usar</li></ul></div>
+        <div class="pc-block"><div class="pc-title con">Contras</div><ul class="pc-list"><li>✗ Poca comunidad</li><li>✗ Poco conocido</li></ul></div>
+      </div>
+      <div class="score-row"><span style="font-size:10px;color:var(--mid)">Puntaje</span><div class="score-bar"><div class="score-fill" style="width:62%;background:var(--orange)"></div></div><span class="score-num">6.2</span></div>
+    </div>
+
+    <div class="sw-card">
+      <div class="price-row"><div><div class="sw-name">QuickBooks</div><div class="sw-origin">EE.UU. · Nube</div></div><div style="text-align:right"><div class="price-val">$25–80</div><div class="price-unit">USD/mes</div></div></div>
+      <div class="sw-desc">Excelente internacionalmente pero sin DIAN nativa. Requiere módulos adicionales para Colombia. Riesgo tributario real si se usa sin configuración especializada.</div>
+      <div class="sw-badges"><span class="badge br">Sin DIAN nativa</span><span class="badge bb">API robusta</span></div>
+      <div class="pros-cons">
+        <div class="pc-block"><div class="pc-title pro">Pros</div><ul class="pc-list"><li>✓ UI muy pulida</li><li>✓ API robusta</li></ul></div>
+        <div class="pc-block"><div class="pc-title con">Contras</div><ul class="pc-list"><li>✗ No cumple DIAN nativo</li><li>✗ Costo en dólares</li><li>✗ Soporte en inglés</li></ul></div>
+      </div>
+      <div class="score-row"><span style="font-size:10px;color:var(--mid)">Puntaje</span><div class="score-bar"><div class="score-fill" style="width:48%;background:var(--red)"></div></div><span class="score-num">4.8</span></div>
+    </div>
+
+    <div class="sw-card" style="background:#F8F9FA;border:2px dashed #DDE1E7">
+      <div class="price-row"><div><div class="sw-name" style="color:var(--mid)">Sistema propio</div><div class="sw-origin">Desarrollo desde cero</div></div><div style="text-align:right"><div class="price-val" style="color:var(--red)">$80M+</div><div class="price-unit">COP inversión</div></div></div>
+      <div class="sw-desc">Construir un sistema contable propio implica cumplir DIAN, NIIF, retenciones, ICA, IVA y actualizaciones tributarias continuas. No tiene sentido para una consultora.</div>
+      <div class="sw-badges"><span class="badge br">6–12 meses dev</span><span class="badge br">Riesgo DIAN</span><span class="badge br">Mantenimiento ∞</span></div>
+      <div class="pros-cons">
+        <div class="pc-block"><div class="pc-title pro">Pros</div><ul class="pc-list"><li>✓ Control total</li></ul></div>
+        <div class="pc-block"><div class="pc-title con">Contras</div><ul class="pc-list"><li>✗ Meses de desarrollo</li><li>✗ Riesgo legal DIAN</li><li>✗ Distrae del negocio</li></ul></div>
+      </div>
+      <div class="score-row"><span style="font-size:10px;color:var(--mid)">Puntaje</span><div class="score-bar"><div class="score-fill" style="width:10%;background:var(--red)"></div></div><span class="score-num">1.0</span></div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="card-title" style="margin-bottom:14px">Matriz comparativa</div>
+    <table>
+      <thead><tr><th>Característica</th><th class="wc">Alegra</th><th>Siigo</th><th>World Office</th><th>ContaPyme</th><th>QuickBooks</th></tr></thead>
+      <tbody>
+        <tr><td style="font-weight:600">Facturación electrónica DIAN</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="partial">~</span></td></tr>
+        <tr><td style="font-weight:600">NIIF para PYME</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="no">✗</span></td></tr>
+        <tr><td style="font-weight:600">Multi-empresa / Plan Contador</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="partial">~</span></td><td style="text-align:center"><span class="partial">~</span></td><td style="text-align:center"><span class="no">✗</span></td></tr>
+        <tr><td style="font-weight:600">API disponible y documentada</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="partial">~</span></td><td style="text-align:center"><span class="no">✗</span></td><td style="text-align:center"><span class="no">✗</span></td><td style="text-align:center"><span class="yes">✓</span></td></tr>
+        <tr><td style="font-weight:600">100% en la nube</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="no">✗</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td></tr>
+        <tr><td style="font-weight:600">Precio accesible PYME</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="partial">~</span></td><td style="text-align:center"><span class="partial">~</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="no">✗</span></td></tr>
+        <tr><td style="font-weight:600">Curva de aprendizaje baja</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="no">✗</span></td><td style="text-align:center"><span class="no">✗</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="partial">~</span></td></tr>
+        <tr><td style="font-weight:600">Soporte en Colombia</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="partial">~</span></td><td style="text-align:center"><span class="no">✗</span></td></tr>
+        <tr><td style="font-weight:600">Integración Google Sheets</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="partial">~</span></td><td style="text-align:center"><span class="no">✗</span></td><td style="text-align:center"><span class="no">✗</span></td><td style="text-align:center"><span class="yes">✓</span></td></tr>
+        <tr><td style="font-weight:600">Recomendable a clientes PYME</td><td class="wc" style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="yes">✓</span></td><td style="text-align:center"><span class="partial">~</span></td><td style="text-align:center"><span class="partial">~</span></td><td style="text-align:center"><span class="no">✗</span></td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:10px;font-size:10px;color:var(--mid)">✓ Sí completo · ~ Parcial o con limitaciones · ✗ No disponible</div>
+  </div>
+
+  <div class="dark-box">
+    <div style="display:flex;gap:16px;align-items:flex-start">
+      <div style="font-size:32px">🏆</div>
+      <div>
+        <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px">Recomendación</div>
+        <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:6px">Alegra ahora · Siigo cuando superen 6 clientes financieros activos</div>
+        <div style="font-size:12px;color:rgba(255,255,255,.55);line-height:1.6">El valor de Pymia no es el software — es el proceso encima del software. Alegra es la herramienta; la consultoría, las automatizaciones y los reportes son el producto. Conocer Alegra tan bien que se pueda implementar, capacitar y conectar con IA es el diferenciador real.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ API ═══ -->
+<section id="s-api" class="sec">
+  <div class="ph">
+    <div class="ph-tag">Alegra API</div>
+    <h1>Automatizaciones posibles con la API</h1>
+    <p>Alegra expone una API REST completa (autenticación básica: email + token). Todo lo siguiente es construible con Google Apps Script, Python o el stack actual de Pymia.</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="auto-card" style="border-left:4px solid var(--gold)">
+      <div class="auto-icon">🔄</div>
+      <div class="auto-title">Facturación automática</div>
+      <ul class="auto-list">
+        <li><span style="color:var(--gold);font-weight:700">→</span>Generar y enviar facturas recurrentes mensuales sin abrir Alegra</li>
+        <li><span style="color:var(--gold);font-weight:700">→</span>Crear facturas automáticamente al registrar un pago de servicio</li>
+        <li><span style="color:var(--gold);font-weight:700">→</span>Enviar recordatorios de cobro por correo cuando una factura vence</li>
+        <li><span style="color:var(--gold);font-weight:700">→</span>Anular y reemplazar facturas con errores sin intervención manual</li>
+      </ul>
+    </div>
+    <div class="auto-card" style="border-left:4px solid var(--blue)">
+      <div class="auto-icon">📊</div>
+      <div class="auto-title">Reportes automáticos para clientes</div>
+      <ul class="auto-list">
+        <li><span style="color:var(--blue);font-weight:700">→</span>Extraer P&G, balance y flujo de caja y enviarlo por correo cada mes</li>
+        <li><span style="color:var(--blue);font-weight:700">→</span>Dashboard financiero en Google Sheets actualizado en tiempo real</li>
+        <li><span style="color:var(--blue);font-weight:700">→</span>Resumen mensual generado por Claude AI analizando los números</li>
+        <li><span style="color:var(--blue);font-weight:700">→</span>Reporte de cartera vencida automático con semáforo de riesgo</li>
+      </ul>
+    </div>
+    <div class="auto-card" style="border-left:4px solid var(--teal)">
+      <div class="auto-icon">🔗</div>
+      <div class="auto-title">Integración con otros sistemas</div>
+      <ul class="auto-list">
+        <li><span style="color:var(--teal);font-weight:700">→</span>Contrato cerrado en CRM → cliente creado automáticamente en Alegra</li>
+        <li><span style="color:var(--teal);font-weight:700">→</span>Lead convertido → registrado en Alegra sin intervención manual</li>
+        <li><span style="color:var(--teal);font-weight:700">→</span>Sincronización de contactos Alegra ↔ Google Sheets en tiempo real</li>
+        <li><span style="color:var(--teal);font-weight:700">→</span>Pagos registrados en banco → conciliados automáticamente en Alegra</li>
+      </ul>
+    </div>
+    <div class="auto-card" style="border-left:4px solid var(--orange)">
+      <div class="auto-icon">🚨</div>
+      <div class="auto-title">Alertas inteligentes</div>
+      <ul class="auto-list">
+        <li><span style="color:var(--orange);font-weight:700">→</span>Notificar cuando facturas llevan más de X días vencidas</li>
+        <li><span style="color:var(--orange);font-weight:700">→</span>Detectar flujo de caja negativo proyectado y alertar al contador</li>
+        <li><span style="color:var(--orange);font-weight:700">→</span>Avisar cuando gastos superan el presupuesto definido por categoría</li>
+        <li><span style="color:var(--orange);font-weight:700">→</span>Alerta de vencimientos tributarios (IVA, retenciones) con 5 días de anticipación</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="dark-box">
+    <div style="display:flex;align-items:flex-start;gap:18px">
+      <div style="font-size:36px;flex-shrink:0">🤖</div>
+      <div style="flex:1">
+        <div style="font-size:11px;font-weight:700;color:var(--gold);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Producto estrella — Q3 de Mario</div>
+        <div style="font-size:18px;font-weight:900;color:#fff;margin-bottom:8px">Diagnóstico financiero con IA</div>
+        <p style="font-size:12px;color:rgba(255,255,255,.6);line-height:1.7;margin-bottom:14px">Extraer datos de Alegra (ingresos, gastos, deudas, flujo de caja) → pasarlos a Claude AI → generar automáticamente un diagnóstico financiero completo con recomendaciones personalizadas para el cliente. Entregado mensualmente como PDF o dashboard interactivo.</p>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <span style="background:rgba(232,184,75,.2);border:1px solid rgba(232,184,75,.3);color:var(--gold);padding:3px 12px;border-radius:20px;font-size:10px;font-weight:600">Alegra API</span>
+          <span style="background:rgba(26,188,156,.2);border:1px solid rgba(26,188,156,.3);color:var(--teal);padding:3px 12px;border-radius:20px;font-size:10px;font-weight:600">Claude AI</span>
+          <span style="background:rgba(41,128,185,.2);border:1px solid rgba(41,128,185,.3);color:#5dade2;padding:3px 12px;border-radius:20px;font-size:10px;font-weight:600">Google Sheets</span>
+          <span style="background:rgba(39,174,96,.2);border:1px solid rgba(39,174,96,.3);color:var(--green);padding:3px 12px;border-radius:20px;font-size:10px;font-weight:600">Google Apps Script</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Endpoints clave de la API de Alegra</div>
+    <div class="card-sub">Lo que Pymia usará con más frecuencia para automatizaciones</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+      <div style="background:#F4F6F9;border-radius:6px;padding:12px 14px"><div style="font-size:10px;font-weight:700;color:var(--navy);font-family:monospace;margin-bottom:4px">GET /invoices</div><div style="font-size:11px;color:var(--mid)">Listar facturas por estado, fecha o cliente</div></div>
+      <div style="background:#F4F6F9;border-radius:6px;padding:12px 14px"><div style="font-size:10px;font-weight:700;color:var(--navy);font-family:monospace;margin-bottom:4px">POST /invoices</div><div style="font-size:11px;color:var(--mid)">Crear y emitir una factura electrónica</div></div>
+      <div style="background:#F4F6F9;border-radius:6px;padding:12px 14px"><div style="font-size:10px;font-weight:700;color:var(--navy);font-family:monospace;margin-bottom:4px">GET /contacts</div><div style="font-size:11px;color:var(--mid)">Consultar clientes y proveedores</div></div>
+      <div style="background:#F4F6F9;border-radius:6px;padding:12px 14px"><div style="font-size:10px;font-weight:700;color:var(--navy);font-family:monospace;margin-bottom:4px">GET /reports/profit-loss</div><div style="font-size:11px;color:var(--mid)">P&G del período seleccionado</div></div>
+      <div style="background:#F4F6F9;border-radius:6px;padding:12px 14px"><div style="font-size:10px;font-weight:700;color:var(--navy);font-family:monospace;margin-bottom:4px">GET /reports/balance</div><div style="font-size:11px;color:var(--mid)">Balance general en tiempo real</div></div>
+      <div style="background:#F4F6F9;border-radius:6px;padding:12px 14px"><div style="font-size:10px;font-weight:700;color:var(--navy);font-family:monospace;margin-bottom:4px">GET /payments</div><div style="font-size:11px;color:var(--mid)">Pagos recibidos y pendientes</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ LEGAL ═══ -->
+<section id="s-legal" class="sec">
+  <div class="ph">
+    <div class="ph-tag">Marco legal Colombia</div>
+    <h1>Marco legal — por qué Pymia no es una firma contable</h1>
+    <p>Pymia vende tecnología y automatización, no contabilidad. Esta distinción no es solo de posicionamiento — es legal. Aquí está el porqué y cómo eso define el servicio.</p>
+  </div>
+
+  <div style="background:linear-gradient(135deg,rgba(39,174,96,.15),rgba(26,188,156,.1));border:2px solid var(--teal);border-radius:12px;padding:18px 22px;margin-bottom:20px">
+    <div style="font-size:13px;font-weight:800;color:var(--teal);margin-bottom:8px">El modelo elegido por Pymia</div>
+    <div style="font-size:13px;color:var(--light);line-height:1.6">Pymia instala Alegra en el negocio del cliente, conecta las automatizaciones, y entrega dashboards + diagnóstico AI. <strong>El cliente tiene su propio Contador Público</strong> — él registra los movimientos, hace la conciliación y firma lo que haya que firmar. Pymia no toca la contabilidad. Pymia tecnifica el proceso.</div>
+    <div style="display:flex;gap:10px;margin-top:12px;flex-wrap:wrap">
+      <span style="background:rgba(39,174,96,.2);color:#6de8a8;border:1px solid #27ae60;border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700">Sin dependencia de firma externa</span>
+      <span style="background:rgba(26,188,156,.2);color:var(--teal);border:1px solid var(--teal);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700">100% del ingreso para Pymia</span>
+      <span style="background:rgba(232,184,75,.2);color:var(--gold);border:1px solid var(--gold);border-radius:20px;padding:3px 12px;font-size:11px;font-weight:700">Escala sin contratar contadores</span>
+    </div>
+  </div>
+
+  <div class="alert-box alert-red">
+    <div class="alert-icon">⚠️</div>
+    <div>
+      <div class="alert-title">Ley 43 de 1990 — por qué no podemos llamarnos firma contable</div>
+      <div class="alert-text">Los estados financieros, declaraciones de impuestos y reportes oficiales ante la DIAN <strong>deben llevar la firma de un Contador Público</strong> con tarjeta profesional vigente. Firmar esos documentos sin esa tarjeta es ejercicio ilegal de la profesión. Mario tiene tarjeta de Ingeniero Industrial. Por eso Pymia no firma, no certifica ni actúa como agente contable — eso lo hace el contador del cliente.</div>
+    </div>
+  </div>
+
+  <div class="perm-grid">
+    <div class="perm-block perm-yes">
+      <div class="perm-title">✓ Lo que Pymia SÍ puede hacer</div>
+      <ul class="perm-list">
+        <li><span style="color:var(--green)">✓</span>Consultoría financiera y de procesos empresariales</li>
+        <li><span style="color:var(--green)">✓</span>Automatización de procesos contables con tecnología</li>
+        <li><span style="color:var(--green)">✓</span>Implementar y configurar Alegra para clientes</li>
+        <li><span style="color:var(--green)">✓</span>Generar reportes y dashboards financieros automatizados</li>
+        <li><span style="color:var(--green)">✓</span>Diagnósticos financieros con IA como herramienta de apoyo</li>
+        <li><span style="color:var(--green)">✓</span>Capacitar al cliente en el uso de herramientas contables</li>
+        <li><span style="color:var(--green)">✓</span>Conectar datos de Alegra con dashboards y alertas automáticas</li>
+      </ul>
+    </div>
+    <div class="perm-block perm-no">
+      <div class="perm-title">✗ Lo que NO puede hacer sin Contador Público</div>
+      <ul class="perm-list">
+        <li><span style="color:var(--red)">✗</span>Firmar estados financieros oficiales</li>
+        <li><span style="color:var(--red)">✗</span>Firmar declaraciones de impuestos (IVA, Renta, Retenciones)</li>
+        <li><span style="color:var(--red)">✗</span>Certificar información contable ante terceros o entidades</li>
+        <li><span style="color:var(--red)">✗</span>Actuar como revisor fiscal</li>
+        <li><span style="color:var(--red)">✗</span>Presentar informes ante la Supersociedades</li>
+        <li><span style="color:var(--red)">✗</span>Avalar balances para solicitudes de crédito bancario</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:12px">Riesgos si Pymia no se estructura correctamente</div>
+  <div class="risk-grid" style="margin-bottom:20px">
+    <div class="risk-item"><div class="risk-icon">⚖️</div><div><div class="risk-title">Demanda civil del cliente</div><div class="risk-desc">Si un error contable de Pymia genera una sanción DIAN, el cliente puede demandar por daños y perjuicios civiles.</div></div></div>
+    <div class="risk-item high"><div class="risk-icon">🏛️</div><div><div class="risk-title">Sanción directa de la DIAN</div><div class="risk-desc">Declaraciones incorrectas generan multas de hasta el 200% del impuesto no pagado, más intereses de mora.</div></div></div>
+    <div class="risk-item high"><div class="risk-icon">🚫</div><div><div class="risk-title">Ejercicio ilegal de la profesión</div><div class="risk-desc">Firmar documentos contables sin tarjeta de Contador Público es un delito en Colombia. Riesgo penal real para los firmantes.</div></div></div>
+    <div class="risk-item"><div class="risk-icon">🔍</div><div><div class="risk-title">Complicidad en fraude fiscal</div><div class="risk-desc">Si un cliente usa la contabilidad de Pymia para evadir y se prueba que Pymia sabía, hay responsabilidad compartida.</div></div></div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:12px">Las 2 opciones que existían — y cuál escoge Pymia</div>
+  <div class="opt-grid">
+    <div class="opt-card" style="opacity:.7;position:relative">
+      <div style="position:absolute;top:-10px;right:20px;background:#c0392b;color:#fff;font-size:10px;font-weight:800;padding:3px 14px;border-radius:20px">✗ DESCARTADA</div>
+      <div class="opt-num">Opción 1 — Por qué no funciona para Pymia</div>
+      <div class="opt-title">Alianza con un Contador Público que firme</div>
+      <div class="opt-desc">Pymia haría el trabajo operativo completo (Alegra, registros, reportes) y un Contador aliado pondría la firma legal en declaraciones y estados financieros.</div>
+      <div style="margin:12px 0;display:flex;flex-direction:column;gap:8px">
+        <div style="background:rgba(192,57,43,.15);border-left:3px solid #c0392b;border-radius:4px;padding:8px 12px;font-size:11px;color:var(--light)"><strong style="color:#e74c3c">Dependencia crítica:</strong> Si el contador aliado sale, se enferma o sube tarifas, el servicio colapsa. Pymia no puede operar sin él.</div>
+        <div style="background:rgba(192,57,43,.15);border-left:3px solid #c0392b;border-radius:4px;padding:8px 12px;font-size:11px;color:var(--light)"><strong style="color:#e74c3c">Parte del ingreso se va:</strong> El contador cobra por su firma y responsabilidad. De cada cliente, $300k–500k COP/mes salen del ingreso de Pymia.</div>
+        <div style="background:rgba(192,57,43,.15);border-left:3px solid #c0392b;border-radius:4px;padding:8px 12px;font-size:11px;color:var(--light)"><strong style="color:#e74c3c">No escala:</strong> Para atender 20 clientes se necesitarían múltiples contadores. Complejidad operativa sin beneficio para Pymia.</div>
+        <div style="background:rgba(192,57,43,.15);border-left:3px solid #c0392b;border-radius:4px;padding:8px 12px;font-size:11px;color:var(--light)"><strong style="color:#e74c3c">Responsabilidad compartida:</strong> Si el cliente tiene un problema con la DIAN, Pymia queda involucrada porque era quien operaba la contabilidad.</div>
+      </div>
+      <div class="income-box" style="opacity:.7">Cliente paga $1.5M COP/mes<br>→ Pymia: ~$1.1M &nbsp;|&nbsp; Contador aliado: $400k — y toda la dependencia</div>
+    </div>
+    <div class="opt-card dark" style="position:relative">
+      <div style="position:absolute;top:-10px;right:20px;background:var(--teal);color:var(--navy);font-size:10px;font-weight:800;padding:3px 14px;border-radius:20px">★ ELEGIDA</div>
+      <div class="opt-num">Opción 2</div>
+      <div class="opt-title">Tecnología + automatización financiera</div>
+      <div class="opt-desc">Pymia instala Alegra, conecta las automatizaciones y entrega dashboards + diagnóstico AI. El cliente gestiona su propio Contador — como siempre lo ha tenido. Pymia no firma, no certifica, no actúa como agente contable. Solo tecnifica.</div>
+      <div class="income-box">Cliente paga $800k–1.8M COP/mes<br>→ Pymia: 100% del ingreso · Sin intermediarios</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px"><span class="badge bg" style="background:rgba(39,174,96,.2);color:#6de8a8">Sin dependencia externa</span><span class="badge" style="background:rgba(26,188,156,.2);color:var(--teal)">Sin riesgo legal para Pymia</span><span class="badge" style="background:rgba(232,184,75,.2);color:var(--gold)">Escala sin contratar contadores</span></div>
+    </div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:12px">Protecciones que Pymia necesita desde el día 1</div>
+  <div class="protect-grid">
+    <div class="protect-item"><div class="protect-ic">📄</div><div class="protect-title">Contrato claro</div><div class="protect-desc">Pymia trabaja con info que entrega el cliente. Responsabilidad por veracidad es del cliente, siempre.</div></div>
+    <div class="protect-item"><div class="protect-ic">🛡️</div><div class="protect-title">Seguro RC profesional</div><div class="protect-desc">Responsabilidad Civil Profesional — cubre errores u omisiones del servicio de consultoría.</div></div>
+    <div class="protect-item"><div class="protect-ic">✍️</div><div class="protect-title">Cláusula de exoneración</div><div class="protect-desc">Si el cliente oculta o entrega información incorrecta, la responsabilidad es 100% suya. En el contrato.</div></div>
+    <div class="protect-item"><div class="protect-ic">🚩</div><div class="protect-title">Política de señales rojas</div><div class="protect-desc">Protocolo para detectar y rechazar clientes con señales de evasión o fraude fiscal desde el onboarding.</div></div>
+  </div>
+</section>
+
+<!-- ═══ IMPLEMENTACION ═══ -->
+<section id="s-implementacion" class="sec">
+  <div class="ph">
+    <div class="ph-tag">Operación interna</div>
+    <h1>Cómo implementar el servicio de automatización financiera en Pymia</h1>
+    <p>El contador del cliente maneja la parte legal y contable dentro de Alegra. Pymia conecta esos datos, los automatiza y los convierte en dashboards + diagnóstico AI que el cliente realmente entiende.</p>
+  </div>
+
+  <div class="card-title" style="margin-bottom:14px">El pipeline completo del servicio — qué hace quién</div>
+  <div style="background:var(--navy-mid);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:20px;margin-bottom:24px;overflow-x:auto">
+    <div style="display:flex;align-items:stretch;gap:0;min-width:600px">
+      <div style="flex:1;background:rgba(232,184,75,.08);border:1px solid rgba(232,184,75,.3);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:18px;margin-bottom:6px">🏢</div>
+        <div style="font-size:11px;font-weight:800;color:var(--gold);margin-bottom:8px">CLIENTE</div>
+        <div style="font-size:10px;color:var(--light);line-height:1.6;text-align:left">
+          • Tiene su Contador<br>• Opera su negocio<br>• Usa Alegra para facturar<br>• Lee su dashboard
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 8px;color:var(--mid);font-size:18px">→</div>
+      <div style="flex:1;background:rgba(52,152,219,.08);border:1px solid rgba(52,152,219,.3);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:18px;margin-bottom:6px">👤</div>
+        <div style="font-size:11px;font-weight:800;color:var(--blue);margin-bottom:8px">CONTADOR DEL CLIENTE</div>
+        <div style="font-size:10px;color:var(--light);line-height:1.6;text-align:left">
+          • Registra movimientos en Alegra<br>• Hace la conciliación bancaria<br>• Cierra el mes contable<br>• Firma declaraciones DIAN
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 8px;color:var(--mid);font-size:18px">→</div>
+      <div style="flex:1;background:rgba(232,184,75,.05);border:1px solid var(--gold);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:18px;margin-bottom:6px">⚡</div>
+        <div style="font-size:11px;font-weight:800;color:var(--gold);margin-bottom:8px">ALEGRA</div>
+        <div style="font-size:10px;color:var(--light);line-height:1.6;text-align:left">
+          • Genera P&G automáticamente<br>• Genera Balance automáticamente<br>• Genera Flujo de caja<br>• Expone todo vía API REST
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 8px;color:var(--teal);font-size:18px;font-weight:800">→</div>
+      <div style="flex:1.2;background:linear-gradient(135deg,rgba(26,188,156,.15),rgba(39,174,96,.1));border:2px solid var(--teal);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:18px;margin-bottom:6px">🤖</div>
+        <div style="font-size:11px;font-weight:800;color:var(--teal);margin-bottom:8px">PYMIA (automatizado)</div>
+        <div style="font-size:10px;color:var(--light);line-height:1.6;text-align:left">
+          • API jala los datos de Alegra<br>• Dashboard en Google Sheets<br>• Claude genera el diagnóstico AI<br>• Alertas automáticas por Gmail<br>• Automatiza procesos internos
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;padding:0 8px;color:var(--mid);font-size:18px">→</div>
+      <div style="flex:1;background:rgba(155,89,182,.08);border:1px solid rgba(155,89,182,.3);border-radius:8px;padding:14px;text-align:center">
+        <div style="font-size:18px;margin-bottom:6px">📊</div>
+        <div style="font-size:11px;font-weight:800;color:#c39bd3;margin-bottom:8px">LO QUE RECIBE</div>
+        <div style="font-size:10px;color:var(--light);line-height:1.6;text-align:left">
+          • Dashboard tiempo real<br>• Reporte P&G + Balance + FC<br>• Diagnóstico AI día 5 del mes<br>• Alertas proactivas
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;margin-top:14px;font-size:10px;color:var(--mid)">Pymia solo interviene en el bloque verde — todo lo demás lo hacen el cliente, su contador y Alegra.</div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:16px">Fase 0 — Configuración interna de Pymia (una sola vez)</div>
+  <div class="step-row">
+    <div class="step"><div class="step-num">1</div><div class="step-title">Crear cuenta Alegra</div><div class="step-desc">Plan Contador. Configurar los datos de Pymia, logo, información fiscal, resolución de facturación.</div></div>
+    <div class="step"><div class="step-num">2</div><div class="step-num" style="display:none"></div><div class="step-title">Plan de cuentas base</div><div class="step-desc">Definir el plan de cuentas estándar que se usará para PYMEs de servicios, comercio y manufactura.</div></div>
+    <div class="step"><div class="step-num">3</div><div class="step-title">Plantillas de reportes</div><div class="step-desc">Crear las plantillas de P&G, balance y flujo de caja que se entregarán a todos los clientes.</div></div>
+    <div class="step"><div class="step-num">4</div><div class="step-title">Conectar automatizaciones</div><div class="step-desc">Integrar Alegra API con Google Sheets y configurar los reportes automáticos mensuales.</div></div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:16px">Fase 1 — Onboarding de un cliente nuevo</div>
+  <div class="flow-box">
+    <div class="flow-steps">
+      <div class="flow-step"><div class="flow-dot" style="background:#EBF5FB;color:var(--blue)">1</div><div class="flow-content"><div class="flow-name">Reunión de diagnóstico inicial (1 hora)</div><div class="flow-sub">Entender el negocio: sector, régimen tributario, qué software usaba. Confirmar que tiene contador activo — es requisito del servicio. Si no tiene, Pymia lo orienta a encontrar uno.</div></div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#EBF5FB;color:var(--blue)">2</div><div class="flow-content"><div class="flow-name">Instalar y configurar Alegra para el cliente</div><div class="flow-sub">Crear la empresa del cliente en Alegra: plan de cuentas, datos DIAN, resolución de facturación electrónica. El cliente (y su contador) quedan como usuarios.</div></div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#EBF5FB;color:var(--blue)">3</div><div class="flow-content"><div class="flow-name">Migración de data histórica</div><div class="flow-sub">Si venía de otro sistema: importar clientes, proveedores, saldos de apertura. El contador del cliente valida los saldos iniciales.</div></div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#EBF5FB;color:var(--blue)">4</div><div class="flow-content"><div class="flow-name">Capacitación al cliente y su contador (30 min)</div><div class="flow-sub">Cómo registrar ventas y gastos en Alegra. El contador gestiona la parte contable; el cliente aprende a ver sus reportes y dashboard en tiempo real.</div></div></div>
+      <div class="flow-step"><div class="flow-dot" style="background:#EAFAF1;color:var(--green)">✓</div><div class="flow-content"><div class="flow-name">Conectar automatizaciones y entregar dashboard</div><div class="flow-sub">API de Alegra → Google Sheets del cliente. Dashboard financiero en tiempo real listo. Alertas automáticas activadas. Pymia ya no necesita tocar Alegra manualmente.</div></div></div>
+    </div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:16px">Fase 2 — Operación mensual por cliente</div>
+  <div style="background:var(--navy-mid);border:1px solid var(--gold);border-radius:10px;padding:14px 18px;margin-bottom:18px;font-size:12px;color:var(--light)">
+    <strong style="color:var(--gold)">Cómo funciona el modelo:</strong> El contador del cliente registra los movimientos en Alegra y gestiona todo lo legal. Alegra genera automáticamente los 3 estados financieros (P&G, Balance, Flujo de caja). Pymia se conecta vía API, extrae esos datos y los convierte en dashboards + diagnóstico AI. Pymia no toca la contabilidad.
+  </div>
+  <div class="grid-2">
+    <div class="flow-box" style="margin-bottom:0">
+      <div class="flow-title">📋 Lo que hace el contador del cliente</div>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="flow-dot" style="background:#FFF8E7;color:var(--orange);font-size:9px;font-weight:800">C1</div><div class="flow-content"><div class="flow-name">Registra ingresos, gastos y movimientos en Alegra</div><div class="flow-sub">Trabaja directamente en la plataforma que Pymia configuró. Alegra genera los 3 estados automáticamente.</div></div></div>
+        <div class="flow-step"><div class="flow-dot" style="background:#FFF8E7;color:var(--orange);font-size:9px;font-weight:800">C2</div><div class="flow-content"><div class="flow-name">Hace la conciliación bancaria y cierra el mes</div><div class="flow-sub">Cruza extractos, ajusta cuentas y cierra el período contable. Esto es su responsabilidad legal.</div></div></div>
+        <div class="flow-step"><div class="flow-dot" style="background:#FFF8E7;color:var(--orange);font-size:9px;font-weight:800">C3</div><div class="flow-content"><div class="flow-name">Firma declaraciones y estados oficiales</div><div class="flow-sub">Retención en la fuente, IVA, declaración de renta. Todo con su tarjeta profesional.</div></div></div>
+      </div>
+    </div>
+    <div class="flow-box" style="margin-bottom:0">
+      <div class="flow-title">⚙️ Lo que hace Pymia (automatizado)</div>
+      <div class="flow-steps">
+        <div class="flow-step"><div class="flow-dot" style="background:#EAFAF1;color:var(--green);font-size:9px;font-weight:800">P1</div><div class="flow-content"><div class="flow-name">Extrae los datos de Alegra vía API</div><div class="flow-sub">Una vez el contador cierra el mes, Pymia jala automáticamente P&G, Balance y Flujo de caja de Alegra sin intervención manual.</div></div></div>
+        <div class="flow-step"><div class="flow-dot" style="background:#EAFAF1;color:var(--green);font-size:9px;font-weight:800">P2</div><div class="flow-content"><div class="flow-name">Actualiza el dashboard del cliente en Google Sheets</div><div class="flow-sub">Los datos llegan al dashboard en tiempo real. El cliente ve sus números sin necesidad de pedirle nada al contador.</div></div></div>
+        <div class="flow-step"><div class="flow-dot" style="background:#EAFAF1;color:var(--green);font-size:9px;font-weight:800">P3</div><div class="flow-content"><div class="flow-name">Genera y envía el diagnóstico AI + alertas</div><div class="flow-sub">Claude analiza los datos y produce recomendaciones concretas. Alertas automáticas de cartera vencida, vencimientos tributarios y flujo de caja bajo — el día 5 del mes.</div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:20px;margin-bottom:20px" class="card-title">Stack de herramientas del servicio</div>
+  <div class="stack-grid">
+    <div class="stack-item" style="border-top-color:var(--gold)"><div class="stack-tool">Alegra</div><div class="stack-role">Plataforma contable que Pymia configura para el cliente. El contador del cliente trabaja aquí; Pymia lo lee vía API.</div></div>
+    <div class="stack-item" style="border-top-color:var(--blue)"><div class="stack-tool">Google Sheets</div><div class="stack-role">Dashboard financiero del cliente. Se actualiza automáticamente vía API.</div></div>
+    <div class="stack-item" style="border-top-color:var(--teal)"><div class="stack-tool">Google Apps Script</div><div class="stack-role">Motor de automatizaciones. Conecta Alegra, Sheets, Gmail y alertas.</div></div>
+    <div class="stack-item" style="border-top-color:var(--purple)"><div class="stack-tool">Claude AI</div><div class="stack-role">Genera diagnósticos financieros automáticos a partir de los datos de Alegra.</div></div>
+    <div class="stack-item" style="border-top-color:var(--orange)"><div class="stack-tool">Gmail</div><div class="stack-role">Canal de entrega de reportes, alertas y comunicación con el cliente.</div></div>
+    <div class="stack-item" style="border-top-color:var(--green)"><div class="stack-tool">Google Calendar</div><div class="stack-role">Recordatorios de vencimientos tributarios y reuniones mensuales.</div></div>
+  </div>
+</section>
+
+<!-- ═══ COMPETENCIA ═══ -->
+<section id="s-competencia" class="sec">
+  <div class="ph">
+    <div class="ph-tag">Análisis de mercado</div>
+    <h1>Qué hacen otras consultoras colombianas para PYMEs</h1>
+    <p>Mapa del ecosistema actual de consultoría tecnológica y contable en Colombia, enfocado en el segmento PYME — donde Pymia quiere operar.</p>
+  </div>
+
+  <div class="comp-card">
+    <div><div class="comp-name">Trajectory</div><div class="comp-type">Consultoría de tecnología · Colombia</div><div class="comp-badges"><span class="badge bb">Tech</span><span class="badge bo">Transformación digital</span></div><div class="comp-price">Proyectos desde $5M COP</div></div>
+    <div class="comp-detail"><div class="comp-what">Boutique de consultoría tecnológica enfocada en transformación digital de empresas medianas. Implementan herramientas como CRMs, ERPs y automatizan procesos de negocio. Su enfoque es más de mediana empresa que PYME pequeña. Trabajan por proyecto, no en modelo de suscripción mensual.</div><div class="comp-gap"><strong>Gap que deja para Pymia:</strong> No ofrecen servicios continuos de bajo costo. Una PYME pequeña no puede pagar un proyecto de $5M+. Pymia puede capturar ese segmento con un modelo mensual accesible.</div></div>
+  </div>
+
+  <div class="comp-card">
+    <div><div class="comp-name">Contadores y despachos contables</div><div class="comp-type">Aliados potenciales · Nacional</div><div class="comp-badges"><span class="badge bg">Contabilidad</span><span class="badge" style="background:#1a3a4a;color:var(--teal);border:1px solid var(--teal)">Aliado</span></div><div class="comp-price">$400k–1.2M COP/mes</div></div>
+    <div class="comp-detail"><div class="comp-what">Contadores independientes y despachos que llevan la contabilidad de PYMEs. Tienen la tarjeta profesional, hacen la parte legal y firman los documentos. Su debilidad: no tienen tecnología, entregan un PDF a fin de mes, y la relación con el cliente es completamente reactiva. No son competidores de Pymia — son parte del modelo. Pymia no remplaza al contador; le añade la capa tecnológica que él no tiene.</div><div class="comp-gap"><strong>Oportunidad para Pymia:</strong> El cliente ya tiene (o necesita) su contador. Pymia llega encima: instala Alegra, conecta las automatizaciones y entrega el dashboard. El contador sigue firmando, el cliente recibe 10x más valor. Incluso los contadores pueden referir clientes a Pymia o contratarnos para mejorar su propio servicio.</div></div>
+  </div>
+
+  <div class="comp-card">
+    <div><div class="comp-name">Tributi</div><div class="comp-type">Fintech · Colombia · Nube</div><div class="comp-badges"><span class="badge bb">Fintech</span><span class="badge bg">Automatizado</span></div><div class="comp-price">$25k–80k COP/mes</div></div>
+    <div class="comp-detail"><div class="comp-what">Plataforma digital para declaración de impuestos de personas naturales y pequeñas empresas. Automatiza la declaración de renta y retenciones. Muy enfocado en el segmento persona natural / microempresa. No ofrece consultoría estratégica ni automatizaciones de procesos.</div><div class="comp-gap"><strong>Gap que deja para Pymia:</strong> Solo cubre el aspecto tributario básico. No ofrece contabilidad completa, reportes de gestión, diagnósticos financieros ni automatización de procesos internos del cliente.</div></div>
+  </div>
+
+  <div class="comp-card">
+    <div><div class="comp-name">BDO / Grant Thornton Colombia</div><div class="comp-type">Big 4 regionales · Bogotá</div><div class="comp-badges"><span class="badge bp">Enterprise</span><span class="badge bk">Auditoría</span></div><div class="comp-price">$10M+ COP/mes</div></div>
+    <div class="comp-detail"><div class="comp-what">Firmas internacionales de auditoría y consultoría. Excelentes para empresas grandes, mediana y grande empresa. Tienen metodologías sólidas y reputación internacional. Completamente inaccesibles para PYMEs tanto en precio como en mínimo de facturación requerido.</div><div class="comp-gap"><strong>Gap que deja para Pymia:</strong> El 99% del mercado PYME colombiano no puede acceder a estas firmas. Pymia puede ser "el BDO de las PYMEs" — misma calidad de análisis, precio adecuado al segmento.</div></div>
+  </div>
+
+  <div class="comp-card">
+    <div><div class="comp-name">Pragma / Sophos</div><div class="comp-type">Consultoría tech · Colombia</div><div class="comp-badges"><span class="badge bb">Tech</span><span class="badge bp">Enterprise</span></div><div class="comp-price">Proyectos $20M+</div></div>
+    <div class="comp-detail"><div class="comp-what">Grandes consultoras tecnológicas colombianas. Desarrollan software a medida, implementan transformaciones digitales complejas. Sus clientes son bancas, telecomunicaciones, retail grande. El segmento PYME no es rentable para su modelo de costos.</div><div class="comp-gap"><strong>Gap que deja para Pymia:</strong> Las PYMEs necesitan el mismo tipo de transformación digital pero empaquetada, asequible y sin un proyecto de 6 meses. Pymia llena ese espacio con soluciones listas y personalizables.</div></div>
+  </div>
+
+  <div class="opp-box">
+    <div class="opp-title">El espacio que nadie está llenando bien</div>
+    <div class="opp-sub">Y donde Pymia puede ser dominante en el corto plazo</div>
+    <div class="opp-grid">
+      <div class="opp-item"><div class="opp-item-title">Precio de boutique, servicio de empresa grande</div><p>Las PYMEs pagan $800k–1.5M COP/mes y reciben un Excel. Pymia puede cobrar lo mismo y entregar automatizaciones, dashboards y análisis AI.</p></div>
+      <div class="opp-item"><div class="opp-item-title">Modelo de suscripción predecible</div><p>Nadie en el mercado PYME colombiano ofrece un paquete mensual fijo que combine contabilidad + automatización + tecnología en un solo precio.</p></div>
+      <div class="opp-item"><div class="opp-item-title">IA como diferenciador real</div><p>Ningún contador tradicional ni consultora pequeña usa Claude o herramientas de IA para diagnosticar financieramente a sus clientes. Pymia puede ser el primero en el segmento.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ NEGOCIO ═══ -->
+<section id="s-negocio" class="sec">
+  <div class="ph">
+    <div class="ph-tag">Propuesta de valor</div>
+    <h1>Modelo de negocio — Automatización & IA para PYMEs</h1>
+    <p>Cómo Pymia estructura sus servicios, precios y diferenciadores para ser rentable, escalable y difícil de copiar por un contador tradicional.</p>
+  </div>
+
+  <div class="diff-grid" style="margin-bottom:24px">
+    <div class="diff-old">
+      <div class="diff-label">Consultora tradicional</div>
+      <div class="diff-title">Lo que hace todo el mundo</div>
+      <ul class="diff-list">
+        <li><span style="color:var(--red)">✗</span>El cliente tiene un contador pero no entiende sus propios números</li>
+        <li><span style="color:var(--red)">✗</span>Recibe un PDF o Excel a fin de mes — y nada más</li>
+        <li><span style="color:var(--red)">✗</span>Sin alertas, sin proyecciones, sin dashboard en tiempo real</li>
+        <li><span style="color:var(--red)">✗</span>Si el flujo de caja se cae, el cliente se entera tarde</li>
+        <li><span style="color:var(--red)">✗</span>Los procesos internos son manuales y lentos</li>
+        <li><span style="color:var(--red)">✗</span>Relación completamente reactiva — nunca proactiva</li>
+      </ul>
+    </div>
+    <div class="diff-new">
+      <div class="diff-label">Pymia</div>
+      <div class="diff-title">Lo que hace Pymia</div>
+      <ul class="diff-list">
+        <li><span style="color:var(--teal)">✓</span>Instala y configura Alegra para el cliente (el contador trabaja ahí)</li>
+        <li><span style="color:var(--teal)">✓</span>Dashboard financiero en tiempo real vía API — sin pedirle nada al contador</li>
+        <li><span style="color:var(--teal)">✓</span>Diagnóstico AI mensual con recomendaciones concretas y automáticas</li>
+        <li><span style="color:var(--teal)">✓</span>Alertas automáticas de cartera vencida, flujo de caja y vencimientos</li>
+        <li><span style="color:var(--teal)">✓</span>Automatiza procesos internos del cliente (facturación, leads, inventario)</li>
+        <li><span style="color:var(--teal)">✓</span>Relación proactiva — el cliente sabe qué pasa antes de que sea un problema</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:16px">Planes de servicio</div>
+  <div class="tier-grid">
+    <div class="tier">
+      <div class="tier-name">Básico</div>
+      <div class="tier-price">$650k</div>
+      <div class="tier-period">COP / mes por empresa</div>
+      <ul class="tier-features">
+        <li><span style="color:var(--green)">✓</span>Instalación y configuración de Alegra</li>
+        <li><span style="color:var(--green)">✓</span>Capacitación al cliente y su contador</li>
+        <li><span style="color:var(--green)">✓</span>Facturación electrónica DIAN activa</li>
+        <li><span style="color:var(--green)">✓</span>Extracción automática de P&G mensual vía API</li>
+        <li><span style="color:var(--mid)">—</span>Dashboard en tiempo real (Sheets)</li>
+        <li><span style="color:var(--mid)">—</span>Diagnóstico AI mensual</li>
+        <li><span style="color:var(--mid)">—</span>Alertas automáticas</li>
+      </ul>
+      <div class="tier-cta">Ideal para arrancar</div>
+    </div>
+    <div class="tier mid">
+      <div class="tier-pop">Más popular</div>
+      <div class="tier-name">Estándar</div>
+      <div class="tier-price">$1.1M</div>
+      <div class="tier-period">COP / mes por empresa</div>
+      <ul class="tier-features">
+        <li><span style="color:var(--green)">✓</span>Todo lo del plan Básico</li>
+        <li><span style="color:var(--green)">✓</span>Dashboard Google Sheets en tiempo real</li>
+        <li><span style="color:var(--green)">✓</span>Alertas automáticas (cartera, flujo)</li>
+        <li><span style="color:var(--green)">✓</span>Conciliación bancaria mensual</li>
+        <li><span style="color:var(--green)">✓</span>Reporte completo (P&G + Balance + FC)</li>
+        <li><span style="color:var(--mid)">—</span>Diagnóstico AI mensual</li>
+        <li><span style="color:var(--mid)">—</span>Reunión mensual de revisión</li>
+      </ul>
+      <div class="tier-cta">El más solicitado</div>
+    </div>
+    <div class="tier top">
+      <div class="tier-name">Premium</div>
+      <div class="tier-price" style="color:var(--gold)">$1.8M</div>
+      <div class="tier-period">COP / mes por empresa</div>
+      <ul class="tier-features">
+        <li><span style="color:var(--teal)">✓</span>Todo lo del plan Estándar</li>
+        <li><span style="color:var(--teal)">✓</span>Diagnóstico financiero AI mensual</li>
+        <li><span style="color:var(--teal)">✓</span>Reunión mensual de 1 hora (revisión + estrategia)</li>
+        <li><span style="color:var(--teal)">✓</span>Proyección de flujo de caja a 3 meses</li>
+        <li><span style="color:var(--teal)">✓</span>Automatización de 1 proceso interno del cliente</li>
+        <li><span style="color:var(--teal)">✓</span>Soporte prioritario por WhatsApp</li>
+        <li><span style="color:var(--teal)">✓</span>Acceso a Counter (próximamente)</li>
+      </ul>
+      <div class="tier-cta">Experiencia completa</div>
+    </div>
+  </div>
+
+  <div class="rev-box">
+    <div class="card-title" style="margin-bottom:14px">Proyección de ingresos por plan — Mario (año 1)</div>
+    <table class="rev-table">
+      <thead><tr><th>Escenario</th><th>Clientes Básico</th><th>Clientes Estándar</th><th>Clientes Premium</th><th>MRR estimado</th></tr></thead>
+      <tbody>
+        <tr><td>Q1 — Validación</td><td>2</td><td>1</td><td>0</td><td style="color:var(--blue);font-weight:700">$2.4M COP</td></tr>
+        <tr><td>Q2 — Crecimiento</td><td>2</td><td>3</td><td>1</td><td style="color:var(--blue);font-weight:700">$6.4M COP</td></tr>
+        <tr><td>Q3 — Escala</td><td>3</td><td>5</td><td>2</td><td style="color:var(--blue);font-weight:700">$12.1M COP</td></tr>
+        <tr><td>Q4 — Liderazgo</td><td>3</td><td>7</td><td>3</td><td style="color:var(--gold);font-weight:800">$19.1M COP</td></tr>
+      </tbody>
+    </table>
+    <div style="margin-top:10px;font-size:11px;color:var(--mid)">* Proyección solo de la línea de Mario. No incluye automatizaciones one-shot ni proyectos de Oscar o Samuel.</div>
+  </div>
+
+  <div class="card-title" style="margin-bottom:16px">Roadmap de implementación</div>
+  <div class="roadmap">
+    <div class="rm-item"><div class="rm-period">Mes 1–2</div><div class="rm-content"><div class="rm-title">Configurar Alegra y conseguir primeros 2 clientes piloto</div><div class="rm-desc">Implementar el proceso completo con 2 clientes reales. Documentar tiempos, fricciones y ajustar el flujo antes de escalar.</div></div></div>
+    <div class="rm-item"><div class="rm-period">Mes 3</div><div class="rm-content"><div class="rm-title">Automatizar reportes y activar dashboard de clientes</div><div class="rm-desc">Conectar Alegra API con Google Sheets. Cada cliente tiene su dashboard propio actualizado automáticamente.</div></div></div>
+    <div class="rm-item"><div class="rm-period">Mes 4–6</div><div class="rm-content"><div class="rm-title">Escalar a 6 clientes — 3 Estándar + 1 Premium</div><div class="rm-desc">Con el proceso documentado y automatizado, el tiempo por cliente baja de 8 hrs a 3 hrs/mes. Capacidad para escalar sin contratar.</div></div></div>
+    <div class="rm-item"><div class="rm-period">Mes 7–9</div><div class="rm-content"><div class="rm-title">Lanzar el diagnóstico financiero AI como producto propio</div><div class="rm-desc">Extraer datos de Alegra + Claude AI = diagnóstico mensual automático. Esto sube el valor percibido del plan Premium y justifica el precio.</div></div></div>
+    <div class="rm-item"><div class="rm-period">Mes 10–12</div><div class="rm-content"><div class="rm-title">Suite empaquetada con precio fijo — producto escalable</div><div class="rm-desc">Pymia vende un paquete completo (Alegra + automatización + diagnóstico AI) que cualquier PYME puede contratar en menos de 1 semana de implementación.</div></div></div>
+  </div>
+</section>
+
+</main>
+
+<script>
+function nav(id,el){
+  document.querySelectorAll('.sec').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  document.querySelectorAll('.nb').forEach(n=>n.classList.remove('active'));
+  if(el)el.classList.add('active');
+  window.scrollTo(0,0);
+}
+</script>
+</body>
+</html>

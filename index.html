@@ -14,21 +14,18 @@
 }
 body{font-family:'Segoe UI',Arial,sans-serif;background:#EAECEF;color:var(--dark);font-size:13px;line-height:1.6;display:flex;min-height:100vh}
 
-/* SIDEBAR PREMIUM REDESIGN */
-.sb{width:var(--sw);min-height:100vh;background:linear-gradient(180deg, #0D1B2A 0%, #162638 100%);position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100;box-shadow:4px 0 20px rgba(0,0,0,0.15);border-right:1px solid rgba(255,255,255,0.05)}
-.sb-logo{padding:28px 24px;position:relative}
-.sb-logo::after{content:'';position:absolute;bottom:0;left:24px;right:24px;height:1px;background:linear-gradient(90deg, rgba(232,184,75,0.4), transparent)}
-.sb-brand{font-size:10px;font-weight:800;color:var(--gold);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px;display:flex;align-items:center;gap:6px}
-.sb-brand::before{content:'';display:block;width:6px;height:6px;background:var(--gold);border-radius:50%;box-shadow:0 0 8px var(--gold)}
-.sb-title{font-size:14px;font-weight:700;color:#fff;line-height:1.4;letter-spacing:0.5px}
-.sb-nav{flex:1;padding:16px 0;overflow-y:auto}
-.sb-section{padding:12px 24px 6px;font-size:10px;color:rgba(255,255,255,0.4);text-transform:uppercase;letter-spacing:1.5px;font-weight:700;margin-top:8px}
-.nb{display:flex;align-items:center;gap:12px;margin:4px 16px;padding:10px 16px;border-radius:10px;cursor:pointer;color:rgba(255,255,255,.6);transition:all .25s ease;font-size:12px;font-weight:500}
-.nb:hover{background:rgba(255,255,255,.05);color:#fff;transform:translateX(3px)}
-.nb.active{background:rgba(232,184,75,.15);color:var(--gold);font-weight:700;box-shadow:inset 2px 0 0 var(--gold)}
-.nb-ic{font-size:16px;flex-shrink:0;width:20px;text-align:center;filter:grayscale(0.5);transition:all .2s}
-.nb:hover .nb-ic, .nb.active .nb-ic{filter:grayscale(0);transform:scale(1.1)}
-.sb-foot{padding:18px 24px;background:rgba(0,0,0,0.15);font-size:10px;color:rgba(255,255,255,0.4);font-weight:500;text-align:center;letter-spacing:0.5px}
+/* SIDEBAR */
+.sb{width:var(--sw);min-height:100vh;background:var(--navy);position:fixed;top:0;left:0;display:flex;flex-direction:column;z-index:100}
+.sb-logo{padding:22px 20px;border-bottom:1px solid rgba(255,255,255,.1)}
+.sb-brand{font-size:11px;font-weight:700;color:rgba(255,255,255,.35);letter-spacing:3px;text-transform:uppercase;margin-bottom:4px}
+.sb-title{font-size:13px;font-weight:700;color:#fff;line-height:1.3}
+.sb-nav{flex:1;padding:14px 0;overflow-y:auto}
+.sb-section{padding:8px 20px 4px;font-size:10px;color:var(--mid);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+.nb{display:flex;align-items:center;gap:10px;padding:10px 20px;cursor:pointer;color:rgba(255,255,255,.55);border-left:3px solid transparent;transition:all .2s;font-size:12px}
+.nb:hover{background:rgba(255,255,255,.06);color:#fff}
+.nb.active{background:rgba(232,184,75,.12);color:var(--gold);border-left-color:var(--gold)}
+.nb-ic{font-size:15px;flex-shrink:0;width:20px;text-align:center}
+.sb-foot{padding:14px 20px;border-top:1px solid rgba(255,255,255,.08);font-size:10px;color:var(--mid)}
 
 /* MAIN */
 .main{margin-left:var(--sw);flex:1;padding:32px 36px 80px;max-width:calc(100vw - var(--sw))}
@@ -255,8 +252,13 @@ tr:hover td{background:#FAFBFC}
 .dark-box{background:linear-gradient(135deg,#0D1B2A,#0d2a4a);border-radius:12px;padding:24px 28px;position:relative;overflow:hidden;margin-bottom:20px;border:1px solid rgba(232,184,75,.2)}
 /* RESPONSIVE */
 @media (max-width: 768px) {
-  .sb{transform:translateX(-100%);transition:transform .3s ease;width:280px;z-index:1000;}
-  .sb.open{transform:translateX(0);}
+  /* Mobile Header Dropdown Menu */
+  .sb{position:fixed;top:52px;left:0;width:100%;height:auto;min-height:0;max-height:calc(100vh - 52px);background:var(--navy);z-index:89;display:none;box-shadow:0 4px 12px rgba(0,0,0,0.15);}
+  .sb.open{display:flex;}
+  .sb-logo, .sb-foot{display:none;}
+  .sb-nav{padding:12px 0 20px;}
+  .nb{padding:12px 20px;border-left:none;}
+  .nb.active{background:rgba(232,184,75,.1);border-left:none;}
   
   /* Main Container */
   .main{margin-left:0;padding:20px 16px 60px;width:100%;max-width:100%;}
